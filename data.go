@@ -2,20 +2,22 @@ package coronagoaway
 
 import (
 	"encoding/csv"
-	"strings"
 	"log"
+	"strings"
 )
 
-// TODO: convert types?
+// CoronaData is the structure of the data in the table + a Date.
 type CoronaData struct {
-	Province string
-	Country string
-	LastUpdate string
+	Date           string
+	Province       string
+	Country        string
+	LastUpdate     string
 	ConfirmedCases string
-	Deaths string
-	Recovered string
+	Deaths         string
+	Recovered      string
 }
 
+// ReadCsvData returns the lines from the file to read
 func ReadCsvData(data string) ([][]string, error) {
 	lines, err := csv.NewReader(strings.NewReader(data)).ReadAll()
 	if err != nil {
@@ -25,7 +27,8 @@ func ReadCsvData(data string) ([][]string, error) {
 	return lines, nil
 }
 
-func GetCoronaDataFromCsv(data string) ([]CoronaData, error) {
+// GetCoronaDataFromCsv gets the actual data as a slice of CoronaData objects from the CSV
+func GetCoronaDataFromCsv(data string, date string) ([]CoronaData, error) {
 	lines, err := ReadCsvData(data)
 	if err != nil {
 		return []CoronaData{}, err
@@ -36,12 +39,13 @@ func GetCoronaDataFromCsv(data string) ([]CoronaData, error) {
 		// Skip first line (headers)
 		if i > 0 {
 			curr := CoronaData{
-				Province: line[0],
-				Country: line[1],
-				LastUpdate: line[2],
+				Date:           date,
+				Province:       line[0],
+				Country:        line[1],
+				LastUpdate:     line[2],
 				ConfirmedCases: line[3],
-				Deaths: line[4],
-				Recovered: line[5],
+				Deaths:         line[4],
+				Recovered:      line[5],
 			}
 			ret = append(ret, curr)
 		}
