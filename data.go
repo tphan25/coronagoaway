@@ -46,19 +46,14 @@ func GetCoronaDataFromCsv(data string, date string) ([]CoronaData, error) {
 	}
 	ret := make([]CoronaData, 0)
 
+	m := mapNamesToIndices(lines[0])
+
 	for i, line := range lines {
 		// Skip first line (headers)
 		if i > 0 {
 			// https://stackoverflow.com/questions/6395076/using-reflect-how-do-you-set-the-value-of-a-struct-field
-			curr := CoronaData{
-				Date:       date,
-				Province:   line[0],
-				Country:    line[1],
-				LastUpdate: line[2],
-				Confirmed:  line[3],
-				Deaths:     line[4],
-				Recovered:  line[5],
-			}
+			// https://stackoverflow.com/questions/44255344/using-reflection-setstring
+			curr := buildCoronaData(line, m)
 			ret = append(ret, curr)
 		}
 	}
@@ -68,6 +63,7 @@ func GetCoronaDataFromCsv(data string, date string) ([]CoronaData, error) {
 
 // mapNamesToIndices will find which index at which some data resides, based on header name
 func mapNamesToIndices(headerLine []string) map[string]int {
+	// Grabs titles of headers and matches them to structs using struct tags'
 	mapHeadersToFieldNames := make(map[string]string)
 
 	c := CoronaData{}
@@ -88,8 +84,21 @@ func mapNamesToIndices(headerLine []string) map[string]int {
 	}
 
 	ret := make(map[string]int)
+	// headerLine contains the strings we map from headers -> field names -> indices
 	for i, column := range headerLine {
-		ret[column] = i
+		ret[mapHeadersToFieldNames[column]] = i
 	}
 	return ret
+}
+
+func buildCoronaData(line []string, mapToIndices map[string]int) CoronaData {
+	c := CoronaData{}
+	values := reflect.ValueOf(&c).Elem()
+
+	for name, index := range mapToIndices {
+		field := values.FieldByName(name)
+		field.SetString(line[index])
+	}
+
+	return c
 }
