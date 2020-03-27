@@ -86,7 +86,7 @@ func mapNamesToIndices(headerLine []string) map[string]int {
 	ret := make(map[string]int)
 	// headerLine contains the strings we map from headers -> field names -> indices
 	for i, column := range headerLine {
-		ret[mapHeadersToFieldNames[column]] = i
+		ret[mapHeadersToFieldNames[removeUtfBom(column)]] = i
 	}
 	return ret
 }
@@ -101,4 +101,12 @@ func buildCoronaData(line []string, mapToIndices map[string]int) CoronaData {
 	}
 
 	return c
+}
+
+// Strip the byte order mark character from a string. This was breaking Province/State, as the CSV
+// has a BOM there that makes it not equal to the field name acquired through reflection.
+// Purely extraneous as the files are not UTF-16 anyhow.
+func removeUtfBom(str string) string {
+	bomVal := 65279
+	return strings.Trim(str, string(rune(bomVal)))
 }
